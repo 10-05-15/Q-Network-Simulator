@@ -133,8 +133,8 @@ class coherence_evaluator:
         noise_model.add_all_qubit_quantum_error(error, ['id', 'h', 'cx'])
 
         # Step 3: Run the input circuit with noise
-        backend = Aer.get_backend('statevector_simulator')
-        noisy_result = execute(circuit, backend, noise_model=noise_model).result()
+        backend = AerSimulator.get_backend('statevector_simulator')
+        noisy_result = transpile(circuit, backend, noise_model=noise_model).result()
         noisy_state = noisy_result.get_statevector()
 
         # Step 4: Calculate fidelity between ideal and noisy state

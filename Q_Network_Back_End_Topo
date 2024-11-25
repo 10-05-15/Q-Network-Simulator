@@ -1,4 +1,4 @@
-import Q_Network_Back_End_Part
+from Q_Network_Back_End_Parts import *
 
 qubit_generator=qubit_generator()
 quantum_node=quantum_node()
@@ -14,7 +14,7 @@ class TopologyCreator:
         # Initialize attributes to store connections and node tracking
         self.all_connections = []
         self.origin_to_destination_dict = {}
-        self.visited_origin_nodes = set()
+        self.visited_origin_nodes = set() 
         self.visited_destination_nodes = set()
 
     def create_topology(self, input_topology_file_name):
@@ -50,3 +50,6 @@ class TopologyCreator:
                         self.all_connections.append(new_wire)
 
         return self.all_connections
+
+
+
