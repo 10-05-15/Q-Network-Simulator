@@ -10,40 +10,36 @@ from qiskit.quantum_info import Statevector, state_fidelity
 import numpy as np
 
 class qubit_generator:
-    def __init__(self, num_qubits=4, state='zero'):
+    def __init__(self, num_qubits, state):
         self.num_qubits = num_qubits
         self.state = state
 
     def generate_qubits(self):
+        origin=[]
+        id = 0 
+
         circuit = QuantumCircuit(self.num_qubits)
+
+        if self.qubits == 1:
+            self.state == 'plus'
+        elif self.qubits > 1:
+            self.state == 'entangled'
+
         if self.state == 'plus':
             circuit.h(range(self.num_qubits))  # Hadamard to create |+⟩ state
         elif self.state == 'entangled' and self.num_qubits > 1:
             circuit.h(0)
             for i in range(1, self.num_qubits):
-                circuit.cx(0, i)  # Create Bell pairs
-        # Other states could be added similarly
-        return circuit
+                circuit.cx(0, i) 
+
+        origin.append(circuit, id)
+        return origin
 
 class quantum_node:
-    def __init__(self, id): # Constructor
-        # Initialize attributes here
-        self.id = parameters[0]
-        # and so on
-
+    def __init__(self):
+        self
     # See section on Quantum Nodes
     def quantum_node_operation(self, circuit, qubit_idx=0, mode='random', num_operations=3):
-
- #   Apply a quantum node operation on a given qubit in the circuit.
-
-#    Parameters:
-#    - circuit: QuantumCircuit - The circuit on which to operate.
-#    - qubit_idx: int - Index of the qubit to operate on.
-#    - mode: str - 'random' for random operations or 'rigorous' for a specific sequence.
-#    - num_operations: int - Number of operations for random mode.
-
-#    Returns:
-#    - QuantumCircuit with applied operations.
  
         if mode == 'random':
             # Apply a sequence of random operations
@@ -145,12 +141,18 @@ class coherence_evaluator:
 class qubit_measurer:
     def __init__(self, circuit):
         self.circuit = circuit
+        
 
     def measure_qubits(self):
+        end = []
+        id = 1
         # Measure all qubits in the circuit
         num_qubits = self.circuit.num_qubits
         self.circuit.measure_all()
-        return self.circuit
+
+        end.append(self.circuit, id)
+        return end
+    
 
 class shors_QEC:
     def __init__(self):
