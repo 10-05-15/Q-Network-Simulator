@@ -1,0 +1,52 @@
+import Q_Network_Back_End_Part
+
+qubit_generator=qubit_generator()
+quantum_node=quantum_node()
+wire=wire()
+qubit_transporter=qubit_transporter()
+coherence_evaluator=coherence_evaluator()
+qubit_measurer=qubit_measurer()
+shors_qec=shors_QEC()
+
+class TopologyCreator:
+
+    def __init__(self):
+        # Initialize attributes to store connections and node tracking
+        self.all_connections = []
+        self.origin_to_destination_dict = {}
+        self.visited_origin_nodes = set()
+        self.visited_destination_nodes = set()
+
+    def create_topology(self, input_topology_file_name):
+        with open(input_topology_file_name, 'r') as file:
+            for line in file:
+                line_by_word = line.strip().split(',')
+
+                # Parse each line to make connections
+                origin_node = int(line_by_word[0])
+                destination_node = int(line_by_word[1])
+                wire_size = int(line_by_word[2])
+                node_distance = float(line_by_word[3])
+
+                new_destination_node = quantum_node(destination_node)
+                new_origin_node = quantum_node(origin_node)
+
+                # Use the wire class to make new connections
+                new_wire = wire(new_origin_node, new_destination_node, wire_size, node_distance)
+
+                self.visited_origin_nodes.add(origin_node)
+                self.visited_destination_nodes.add(destination_node)
+
+                # This specific setup only allows for nodes to act as an origin and a destination each ONCE
+                if origin_node in self.visited_origin_nodes:
+                    print("Origin node already in dictionary")
+                    # We can change this if we want there to be more connections for each node
+                else:
+                    if destination_node in self.visited_destination_nodes:
+                        print("Destination node already in dictionary")
+                    # We can change this if we want there to be more connections for each node
+                    else:
+                        self.origin_to_destination_dict[origin_node] = new_wire
+                        self.all_connections.append(new_wire)
+
+        return self.all_connections
