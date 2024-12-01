@@ -76,6 +76,8 @@ class builder:
         nodes, qubits, distance = topology.parse_file(input_file)
         wires, mapping = topology.create_topology(nodes, qubits, distance)
 
+        
+
     # Going to establish the wires and map into a fixed form here maybe cast to a 2D array?
     # Need to add coherence evaluator are every point and ensure that before it goes to the
     # last node it hits the shors_QEC method. Also, may need to rework final node. Cannot 
