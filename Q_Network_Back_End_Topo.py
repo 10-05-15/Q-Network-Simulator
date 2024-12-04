@@ -85,7 +85,8 @@ class builder:
                 global_circuit.compose(generated[0], inplace=True)
             elif isinstance(node, quantum_node):
                 qubit_idx = idx % qubits
-                circuit = node.quantum_node_operation(global_circuit, qubit_idx)
+                fidelity=coherence_evaluator.evaluate_coherence(global_circuit)
+                circuit = node.quantum_node_operation(global_circuit, fidelity,  qubit_idx)
                 global_circuit.compose(circuit, inplace=True)
         
         for wire in wires:
