@@ -36,8 +36,31 @@ class qubit_generator:
         return origin
 
 class quantum_node:
+
+    def __init__(self, noise_level=0.01):
+        # Initialize with a default noise level, which can be modified
+        self.noise_level = noise_level
+
     def quantum_node_operation_random(self, circuit, qubit_idx=0, mode='random', num_operations=3):
-        for _ in range(num_operations):
+        # Step 1: Generate the ideal state vector from the input circuit
+        ideal_state = Statevector.from_instruction(circuit)
+
+        # Step 2: Define the noise model to simulate decoherence
+        noise_model = NoiseModel()
+        # Apply depolarizing noise to all qubits in the circuit
+        error = depolarizing_error(self.noise_level, 1)
+        noise_model.add_all_qubit_quantum_error(error, ['id', 'h', 'cx'])
+
+        # Step 3: Run the input circuit with noise
+        backend = AerSimulator.get_backend('statevector_simulator')
+        noisy_result = transpile(circuit, backend, noise_model=noise_model).result()
+        noisy_state = noisy_result.get_statevector()
+
+        # Step 4: Calculate fidelity between ideal and noisy state
+        fidelity = state_fidelity(ideal_state, noisy_state)
+
+        if fidelity >= 0.9:
+            for _ in range(num_operations):
                 gate_choice = np.random.choice(['h', 'x', 'y', 'z', 's', 't', 'cx'])
                 if gate_choice == 'h':
                     circuit.h(qubit_idx)
@@ -56,23 +79,64 @@ class quantum_node:
                     circuit.cx(qubit_idx, target_qubit)
                 else: 
                     break
-        return circuit
+            return circuit
+        else: 
+            print ("Error: Qubits did not maintain coherence")
+
+
     def quantum_node_operation_rigorous(self, circuit, qubit_idx=0, mode='rigourous'):
-          # Apply a predefined rigorous sequence of transformations
-        circuit.h(qubit_idx)
-        circuit.t(qubit_idx)
-        circuit.x(qubit_idx)
-        circuit.s(qubit_idx)
-        circuit.z(qubit_idx)
-        circuit.y(qubit_idx)
-        circuit.cx(qubit_idx, (qubit_idx + 1) % circuit.num_qubits) 
-        return circuit
+        # Step 1: Generate the ideal state vector from the input circuit
+        ideal_state = Statevector.from_instruction(circuit)
+
+        # Step 2: Define the noise model to simulate decoherence
+        noise_model = NoiseModel()
+        # Apply depolarizing noise to all qubits in the circuit
+        error = depolarizing_error(self.noise_level, 1)
+        noise_model.add_all_qubit_quantum_error(error, ['id', 'h', 'cx'])
+
+        # Step 3: Run the input circuit with noise
+        backend = AerSimulator.get_backend('statevector_simulator')
+        noisy_result = transpile(circuit, backend, noise_model=noise_model).result()
+        noisy_state = noisy_result.get_statevector()
+
+        # Step 4: Calculate fidelity between ideal and noisy state
+        fidelity = state_fidelity(ideal_state, noisy_state)
+
+        if fidelity >= 0.9:
+            circuit.h(qubit_idx)
+            circuit.t(qubit_idx)
+            circuit.x(qubit_idx)
+            circuit.s(qubit_idx)
+            circuit.z(qubit_idx)
+            circuit.y(qubit_idx)
+            circuit.cx(qubit_idx, (qubit_idx + 1) % circuit.num_qubits) 
+            return circuit
+        else: 
+            print ("Error: Qubits did not maintain coherence")
 
 
     #Takes in an input vector of strings representing which gate to apply.
     #It will apply the gates in a series in order from 0 index to the end of series_vector
     def quantum_node_operation_series(self, circuit, qubit_idx=0, mode='series', series_vector)
-        for gate_type in series_vector:
+        # Step 1: Generate the ideal state vector from the input circuit
+        ideal_state = Statevector.from_instruction(circuit)
+
+        # Step 2: Define the noise model to simulate decoherence
+        noise_model = NoiseModel()
+        # Apply depolarizing noise to all qubits in the circuit
+        error = depolarizing_error(self.noise_level, 1)
+        noise_model.add_all_qubit_quantum_error(error, ['id', 'h', 'cx'])
+
+        # Step 3: Run the input circuit with noise
+        backend = AerSimulator.get_backend('statevector_simulator')
+        noisy_result = transpile(circuit, backend, noise_model=noise_model).result()
+        noisy_state = noisy_result.get_statevector()
+
+        # Step 4: Calculate fidelity between ideal and noisy state
+        fidelity = state_fidelity(ideal_state, noisy_state)
+
+        if fidelity >= 0.9:
+            for gate_type in series_vector:
                 if gate_type == 'h':
                     circuit.h(qubit_idx)
                 elif gate_type == 'x':
@@ -86,15 +150,16 @@ class quantum_node:
                 elif gate_type == 't':
                     circuit.t(qubit_idx)
                 elif gate_type == 'cx':
-                    # For CX gate, ensure there's a second qubit to act as the target
                     target_qubit = (qubit_idx + 1) % circuit.num_qubits
                 else:
                     break
-        return circuit
+            return circuit
+        else: 
+            print ("Error: Qubits did not maintain coherence")
+    
 
 class wire:
-  def __init__(self, origin_node, destination_node, size, distance): # Constructor
-    # Node of origin for qubit transfers
+  def __init__(self, origin_node, destination_node, size, distance):
     self.origin_node = origin_node
     # Node in which is the destination for qubit transfers
     self.destination_node = destination_node
@@ -130,35 +195,10 @@ class qubit_transporter:
         self.circuit.i(qubit_idx)  # Identity gate as placeholder
         return self.circuit
     
-class coherence_evaluator:
-    def __init__(self, noise_level=0.01):
-        # Initialize with a default noise level, which can be modified
-        self.noise_level = noise_level
-
-    def evaluate_coherence(self, circuit):
-        # Step 1: Generate the ideal state vector from the input circuit
-        ideal_state = Statevector.from_instruction(circuit)
-
-        # Step 2: Define the noise model to simulate decoherence
-        noise_model = NoiseModel()
-        # Apply depolarizing noise to all qubits in the circuit
-        error = depolarizing_error(self.noise_level, 1)
-        noise_model.add_all_qubit_quantum_error(error, ['id', 'h', 'cx'])
-
-        # Step 3: Run the input circuit with noise
-        backend = AerSimulator.get_backend('statevector_simulator')
-        noisy_result = transpile(circuit, backend, noise_model=noise_model).result()
-        noisy_state = noisy_result.get_statevector()
-
-        # Step 4: Calculate fidelity between ideal and noisy state
-        fidelity = state_fidelity(ideal_state, noisy_state)
-
-        return fidelity
     
 class qubit_measurer:
     def __init__(self, circuit):
         self.circuit = circuit
-
 
     def measure_qubits(self):
         end = []
