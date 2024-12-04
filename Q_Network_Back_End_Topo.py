@@ -72,13 +72,12 @@ class topology:
 
 class builder:
 
-    def assemble_network(self, input_file):
+    def assemble_network(self, input_file, ideal_fidelity):
         nodes, qubits, distance = topology.parse_file(input_file)
         wires, mapping = topology.create_topology(nodes, qubits, distance)
         simulator = AerSimulator()
 
         global_circuit = QuantumCircuit()
-
         for idx, node in enumerate(mapping):
             if isinstance(node, qubit_generator):
                 generated = node.generate_qubits()
@@ -86,7 +85,7 @@ class builder:
             elif isinstance(node, quantum_node):
                 qubit_idx = idx % qubits
                 fidelity=coherence_evaluator.evaluate_coherence(global_circuit)
-                circuit = node.quantum_node_operation(global_circuit, fidelity,  qubit_idx)
+                circuit = node.quantum_node_operation(global_circuit, fidelity, ideal_fidelity, qubit_idx)
                 global_circuit.compose(circuit, inplace=True)
         
         for wire in wires:

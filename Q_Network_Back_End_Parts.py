@@ -28,7 +28,7 @@ class qubit_generator:
             self.state == 'entangled'
 
         if self.state == 'plus':
-            circuit.h(range(self.num_qubits))  # Hadamard to create |+⟩ state
+            circuit.h(range(self.num_qubits)) 
         elif self.state == 'entangled' and self.num_qubits > 1:
             circuit.h(0)
             for i in range(1, self.num_qubits):
@@ -39,8 +39,8 @@ class qubit_generator:
 
 class quantum_node:
 
-    def quantum_node_operation_random(self, circuit, fidelity, qubit_idx, mode='random', num_operations=3):
-        if fidelity >= 0.9:
+    def quantum_node_operation_random(self, circuit, fidelity, ideal_fidelity, qubit_idx, mode='random', num_operations=3):
+        if fidelity >= ideal_fidelity:
             for _ in range(num_operations):
                 gate_choice = np.random.choice(['h', 'x', 'y', 'z', 's', 't', 'cx'])
                 if gate_choice == 'h':
@@ -65,8 +65,8 @@ class quantum_node:
             print ("Error: Qubits did not maintain coherence")
 
 
-    def quantum_node_operation_rigorous(self, circuit, fidelity, qubit_idx, mode='rigourous'):
-        if fidelity >= 0.9:
+    def quantum_node_operation_rigorous(self, circuit, fidelity, ideal_fidelity, qubit_idx, mode='rigourous'):
+        if fidelity >= ideal_fidelity:
             circuit.h(qubit_idx)
             circuit.t(qubit_idx)
             circuit.x(qubit_idx)
@@ -78,11 +78,8 @@ class quantum_node:
         else: 
             print ("Error: Qubits did not maintain coherence")
 
-
-    #Takes in an input vector of strings representing which gate to apply.
-    #It will apply the gates in a series in order from 0 index to the end of series_vector
-    def quantum_node_operation_series(self, circuit, fidelity, qubit_idx, mode='series', series_vector=['h', 't', 'x', 's', 'z', 'y', 'cx']):
-        if fidelity >= 0.9:
+    def quantum_node_operation_series(self, circuit, fidelity, ideal_fidelity, qubit_idx, mode='series', series_vector=['h', 't', 'x', 's', 'z', 'y', 'cx']):
+        if fidelity >= ideal_fidelity:
             for gate_type in series_vector:
                 if gate_type == 'h':
                     circuit.h(qubit_idx)
