@@ -1,5 +1,5 @@
-from Q_Network_Back_End_Parts import *
-from Q_Network_Connection_Logic import *
+from QNBackClasses import *
+from QNValidator import *
 
 qubit_generator=qubit_generator()
 quantum_node=quantum_node()
