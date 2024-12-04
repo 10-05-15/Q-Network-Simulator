@@ -17,8 +17,6 @@ class qubit_generator:
         self.state = state
 
     def generate_qubits(self):
-        origin=[]
-        id = 0 
 
         circuit = QuantumCircuit(self.num_qubits)
 
@@ -33,9 +31,7 @@ class qubit_generator:
             circuit.h(0)
             for i in range(1, self.num_qubits):
                 circuit.cx(0, i) 
-
-        origin.append(circuit, id)
-        return origin
+        return circuit
 
 class quantum_node:
 
@@ -135,7 +131,7 @@ class qubit_transporter:
         self.circuit.i(qubit_idx)  # Identity gate as placeholder
         return self.circuit
     
-    
+'''   
 class qubit_measurer:
     def __init__(self, circuit):
         self.circuit = circuit
@@ -148,6 +144,7 @@ class qubit_measurer:
 
         end.append(self.circuit)
         return end
+'''
     
 class coherence_evaluator:
     def __init__(self, noise_level=0.01):
@@ -181,6 +178,15 @@ class shors_QEC:
         self.ancilla_bits = ClassicalRegister(1, 'ancilla')  # For measurement results
         self.circuit = QuantumCircuit(self.data_qubits, self.ancilla_bits)
 
+    def shors_subcircuit(qubits):
+        if qubits < 1 or qubits > 4:
+            raise ValueError("")
+        qc = QuantumCircuit(qubits)
+        qc.h(range(qubits))
+        qft_circuit = QFT(qubits).decompose()
+        qc.append(qft_circuit, range(qubits))
+        return qc
+    
     def shors_code_qec(self):
         # Step 1: Encode a logical qubit using Shor's code
         # Initialize the first qubit to |+⟩
@@ -207,4 +213,6 @@ class shors_QEC:
         self.circuit.measure(self.data_qubits[0], self.ancilla_bits[0])
 
         return self.circuit
+    
+
 

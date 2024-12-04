@@ -77,7 +77,7 @@ class builder:
         wires, mapping = topology.create_topology(nodes, qubits, distance)
         simulator = AerSimulator()
 
-        global_circuit = QuantumCircuit()
+        global_circuit = QuantumCircuit(qubits, qubits)
         for idx, node in enumerate(mapping):
             if isinstance(node, qubit_generator):
                 generated = node.generate_qubits()
@@ -92,16 +92,14 @@ class builder:
             for qubit_idx in range(wire.size):
                 wire.transport_qubit(global_circuit, qubit_idx)
         
-        
-        global_circuit.measure_all()
+        shors_circuit = shors_QEC.shors_subcircuit(qubits)
+        global_circuit.compose(shors_circuit, inplace=True)
+    
 
-        transpiled_circuit = transpile(global_circuit, simulator)
-        result = simulator.run(transpiled_circuit).result()
-        counts = result.get(counts)
+        global_circuit.measure(range(qubits), range(qubits))
 
-        print("Simulation Complete. Results:")
-        print(counts)
-        return global_circuit, counts
+        return global_circuit
+
 
 
 
