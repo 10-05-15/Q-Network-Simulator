@@ -36,16 +36,9 @@ class qubit_generator:
         return origin
 
 class quantum_node:
-    def __init__(self):
-        self
-    # See section on Quantum Nodes
-    def quantum_node_operation(self, circuit, qubit_idx=0, mode='random', num_operations=3):
- 
-        if mode == 'random':
-            # Apply a sequence of random operations
-            for _ in range(num_operations):
+    def quantum_node_operation_random(self, circuit, qubit_idx=0, mode='random', num_operations=3):
+        for _ in range(num_operations):
                 gate_choice = np.random.choice(['h', 'x', 'y', 'z', 's', 't', 'cx'])
-
                 if gate_choice == 'h':
                     circuit.h(qubit_idx)
                 elif gate_choice == 'x':
@@ -59,20 +52,44 @@ class quantum_node:
                 elif gate_choice == 't':
                     circuit.t(qubit_idx)
                 elif gate_choice == 'cx':
-                    # For CX gate, ensure there's a second qubit to act as the target
                     target_qubit = (qubit_idx + 1) % circuit.num_qubits
                     circuit.cx(qubit_idx, target_qubit)
+                else: 
+                    break
+        return circuit
+    def quantum_node_operation_rigorous(self, circuit, qubit_idx=0, mode='rigourous'):
+          # Apply a predefined rigorous sequence of transformations
+        circuit.h(qubit_idx)
+        circuit.t(qubit_idx)
+        circuit.x(qubit_idx)
+        circuit.s(qubit_idx)
+        circuit.z(qubit_idx)
+        circuit.y(qubit_idx)
+        circuit.cx(qubit_idx, (qubit_idx + 1) % circuit.num_qubits) 
+        return circuit
 
-        elif mode == 'rigorous':
-            # Apply a predefined rigorous sequence of transformations
-            circuit.h(qubit_idx)
-            circuit.t(qubit_idx)
-            circuit.x(qubit_idx)
-            circuit.s(qubit_idx)
-            circuit.z(qubit_idx)
-            circuit.y(qubit_idx)
-            circuit.cx(qubit_idx, (qubit_idx + 1) % circuit.num_qubits)  # CNOT with the next qubit (if available)
 
+    #Takes in an input vector of strings representing which gate to apply.
+    #It will apply the gates in a series in order from 0 index to the end of series_vector
+    def quantum_node_operation_series(self, circuit, qubit_idx=0, mode='series', series_vector)
+        for gate_type in series_vector:
+                if gate_type == 'h':
+                    circuit.h(qubit_idx)
+                elif gate_type == 'x':
+                    circuit.x(qubit_idx)
+                elif gate_type == 'y':
+                    circuit.y(qubit_idx)
+                elif gate_type == 'z':
+                    circuit.z(qubit_idx)
+                elif gate_type == 's':
+                    circuit.s(qubit_idx)
+                elif gate_type == 't':
+                    circuit.t(qubit_idx)
+                elif gate_type == 'cx':
+                    # For CX gate, ensure there's a second qubit to act as the target
+                    target_qubit = (qubit_idx + 1) % circuit.num_qubits
+                else:
+                    break
         return circuit
 
 class wire:
@@ -141,16 +158,15 @@ class coherence_evaluator:
 class qubit_measurer:
     def __init__(self, circuit):
         self.circuit = circuit
-        
+
 
     def measure_qubits(self):
         end = []
-        id = 1
         # Measure all qubits in the circuit
         num_qubits = self.circuit.num_qubits
         self.circuit.measure_all()
 
-        end.append(self.circuit, id)
+        end.append(self.circuit)
         return end
     
 

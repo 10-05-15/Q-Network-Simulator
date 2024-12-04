@@ -55,7 +55,6 @@ class topology:
         if verdict == True:
             mapList = []
             for i in nodes:
-
                 if nodes[i]  == 0:
                     origin = qubit_generator.generate_qubits(qubits)
                     mapList.append(origin)
@@ -64,6 +63,7 @@ class topology:
                     mapList.append(node)
                 elif nodes[i] == 1:
                     break
+
             wireList=[]
             for i in mapList:
                 wire = wire.wire(mapList[i], mapList[i+1], wire_size=qubits, node_distance=distance)
@@ -75,6 +75,37 @@ class builder:
     def assemble_network(self, input_file):
         nodes, qubits, distance = topology.parse_file(input_file)
         wires, mapping = topology.create_topology(nodes, qubits, distance)
+        simulator = AerSimulator()
+
+        global_circuit = QuantumCircuit()
+
+        for idx, node in enumerate(mapping):
+            if isinstance(node, qubit_generator):
+                generated = node.generate_qubits()
+                global_circuit.compose(generated[0], inplace=True)
+            elif isinstance(node, quantum_node):
+                qubit_idx = idx % qubits
+                circuit = node.quantum_node_operation(global_circuit, qubit_idx)
+                global_circuit.compose(circuit, inplace=True)
+        
+        for wire in wires:
+            for qubit_idx in range(wire.size):
+                wire.transport_qubit(global_circuit, qubit_idx)
+        
+        
+        global_circuit.measure_all()
+
+        transpiled_circuit = transpile(global_circuit, simulator)
+        result = simulator.run(transpiled_circuit).result()
+        counts = result.get(counts)
+
+        print("Simulation Complete. Results:")
+        print(counts)
+        return global_circuit, counts
+
+
+
+
 
         
 
