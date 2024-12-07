@@ -1,0 +1,9 @@
+-NODE-
+0
+2
+3
+1
+-QUBITS-
+2
+-DISTANCE-
+45

@@ -33,6 +33,7 @@ class node_validator:
         self.intermediate_connections = {}
 
     def validate(self):
+        print(self.nodes_list)
         for i, node in enumerate(self.nodes_list):
             if node == 0:  
                 if self.origin_connected:  

@@ -1,14 +1,7 @@
 from QNBackClasses import *
 from QNValidator import *
 
-qubit_generator=qubit_generator()
-quantum_node=quantum_node()
-wire=wire()
-qubit_transporter=qubit_transporter()
-coherence_evaluator=coherence_evaluator()
-qubit_measurer=qubit_measurer()
-shors_qec=shors_QEC()
-node_validator=node_validator()
+
 
 class topology:
 
@@ -51,7 +44,8 @@ class topology:
         return nodes, qubits, distance 
 
     def create_topology(self, nodes, qubits, distance):
-        verdict = node_validator.validate (nodes)
+        validator = node_validator(nodes)
+        verdict = validator.validate()
         if verdict == True:
             mapList = []
             for i in nodes:
@@ -72,10 +66,10 @@ class topology:
 
 class builder:
 
-    def assemble_network(self, input_file, ideal_fidelity):
-        nodes, qubits, distance = topology.parse_file(input_file)
-        wires, mapping = topology.create_topology(nodes, qubits, distance)
-        simulator = AerSimulator()
+    def assemble_network(self, input_file, ideal_fidelity:float):
+        topo = topology()
+        nodes, qubits, distance = topo.parse_file(input_file)
+        wires, mapping = topo.create_topology(nodes, qubits, distance)
 
         global_circuit = QuantumCircuit(qubits, qubits)
         for idx, node in enumerate(mapping):
