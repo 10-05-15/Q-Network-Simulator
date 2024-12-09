@@ -1,0 +1,132 @@
+'''
+          QNBACKCLASSES CODE THAT I REMOVE
+-----------------------------------------------------
+'''
+def quantum_node_operation_random(self, circuit,  fidelity, ideal_fidelity, qubit_idx, mode='random', num_operations=3):
+        if fidelity >= ideal_fidelity:
+            for _ in range(num_operations):
+                gate_choice = np.random.choice(['h', 'x', 'y', 'z', 's', 't', 'cx'])
+                for i in qubit_idx:
+                    if gate_choice == 'h':
+                        circuit.h(i)
+                    elif gate_choice == 'x':
+                        circuit.x(i)
+                    elif gate_choice == 'y':
+                        circuit.y(i)
+                    elif gate_choice == 'z':
+                        circuit.z(i)
+                    elif gate_choice == 's':
+                        circuit.s(i)
+                    elif gate_choice == 't':
+                        circuit.t(i)
+                    elif gate_choice == 'cx':
+                        target_qubit = (i + 1) % circuit.num_qubits
+                        circuit.cx(i, target_qubit)
+                    else: 
+                        break
+            return circuit
+        else: 
+            print ("Error: Qubits did not maintain coherence")
+
+
+def quantum_node_operation_rigorous(self, circuit, fidelity, ideal_fidelity, qubit_idx, mode='rigourous'):
+        if fidelity >= ideal_fidelity:
+            for i in qubit_idx:
+                circuit.h(i)
+                circuit.t(i)
+                circuit.x(i)
+                circuit.s(i)
+                circuit.z(i)
+                circuit.y(i)
+                circuit.cx(i, (i + 1) % circuit.num_qubits) 
+            return circuit
+        else: 
+            print ("Error: Qubits did not maintain coherence")
+
+def quantum_node_operation_series(self, circuit, fidelity, ideal_fidelity, qubit_idx, mode='series', series_vector=['h', 't', 'x', 's', 'z', 'y', 'cx']):
+
+        if fidelity >= ideal_fidelity:
+            for i in qubit_idx:
+                circuit.h(i)
+                circuit.x(i)
+                circuit.y(i)
+                circuit.z(i)
+                circuit.s(i)
+                circuit.t(i)
+                target_qubit = (i + 1) % circuit.num_qubits
+                circuit.cx(i, target_qubit)
+            return circuit
+        else: 
+            print ("Error: Qubits did not maintain coherence")
+
+def shors_code_qec(self):
+    # Step 1: Encode a logical qubit using Shor's code
+    # Initialize the first qubit to |+⟩
+    self.circuit.h(self.data_qubits[0])
+    for i in [1, 2]:
+        self.circuit.cx(self.data_qubits[0], self.data_qubits[i])  # Create GHZ state (|000⟩ + |111⟩) / sqrt(2)
+
+    # Repeat this for the remaining pairs of three qubits to fully encode
+    for i in range(0, 9, 3):
+        self.circuit.cx(self.data_qubits[i], self.data_qubits[i + 1])
+        self.circuit.cx(self.data_qubits[i], self.data_qubits[i + 2])
+
+    # Step 2: Syndrome Measurement for error detection
+    # Measure parity checks to detect bit-flip errors
+    for i in range(3):
+        self.circuit.cx(self.data_qubits[3 * i], self.data_qubits[3 * i + 1])
+        self.circuit.cx(self.data_qubits[3 * i], self.data_qubits[3 * i + 2])
+
+    # Step 3: Decode back to single qubit (simplified version)
+    for i in range(1, 9):
+        self.circuit.cx(self.data_qubits[0], self.data_qubits[i])  # Undo encoding to retrieve logical qubit
+
+    # Step 4: Measure to confirm correction
+    self.circuit.measure(self.data_qubits[0], self.ancilla_bits[0])
+
+    return self.circuit
+
+'''
+          QNBACKTOPO CODE THAT I REMOVED
+-----------------------------------------------------
+'''
+def create_topology(self, nodes, qubits, distance):
+    validator = node_validator(nodes)
+    verdict = validator.validate()
+    gen = qubit_generator(qubits)
+    qnode = quantum_node()
+    if verdict == True:
+        mapList = []
+        for i in nodes:
+            if nodes[i]  == 0:
+                origin = gen.generate_qubits()
+                mapList.append(origin)
+            elif nodes[i] != 1 and nodes[i] != 0:
+                node = qnode.quantum_node_operation_rigorous()
+                mapList.append(node)
+            elif nodes[i] == 1:
+                break
+
+        wireList=[]
+        for i in mapList:
+            wire = wire.wire(mapList[i], mapList[i+1], wire_size=qubits, node_distance=distance)
+            wireList.apped(wire)
+        return mapList, wireList
+    
+    for wire in wireList:
+        for qubit_idx in range(wire.size):
+            wire.transport_qubit(global_circuit, qubit_idx)
+
+        for idx, node in enumerate(mapping):
+            if isinstance(node, qubit_generator):
+                generated = node.generate_qubits()
+                global_circuit.compose(generated[0], inplace=True)
+            elif isinstance(node, quantum_node):
+                qubit_idx = idx % qubits
+                fidelity=coherence_evaluator.evaluate_coherence(global_circuit)
+                circuit = node.quantum_node_operation(global_circuit, fidelity, ideal_fidelity, qubit_idx)
+                global_circuit.compose(circuit, inplace=True)
+        
+        for wire in wires:
+            for qubit_idx in range(wire.size):
+                wire.transport_qubit(global_circuit, qubit_idx)

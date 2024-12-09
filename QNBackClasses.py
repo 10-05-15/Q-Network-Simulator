@@ -1,6 +1,7 @@
 from qiskit import QuantumCircuit
 from qiskit import ClassicalRegister, QuantumRegister, transpile
 from qiskit_aer import AerSimulator
+from qiskit.circuit.library import QFT
 from qiskit.quantum_info import Kraus, SuperOp
 from qiskit.visualization import plot_histogram
 from qiskit_aer.noise import (NoiseModel, QuantumError, ReadoutError,
@@ -10,22 +11,20 @@ from qiskit.quantum_info import Statevector, state_fidelity
 import numpy as np
 
 class qubit_generator:
-    def __init__(self, num_qubits, state):
+    def __init__(self, num_qubits: int):
         self.num_qubits = num_qubits
-        self.state = state
-
+    
     def generate_qubits(self):
-
         circuit = QuantumCircuit(self.num_qubits)
+        state=''
+        if self.num_qubits == 1:
+            state == 'plus'
+        elif self.num_qubits > 1:
+            state == 'entangled'
 
-        if self.qubits == 1:
-            self.state == 'plus'
-        elif self.qubits > 1:
-            self.state == 'entangled'
-
-        if self.state == 'plus':
-            circuit.h(range(self.num_qubits))  # Hadamard to create |+⟩ state
-        elif self.state == 'entangled' and self.num_qubits > 1:
+        if state == 'plus':
+            circuit.h(range(self.num_qubits))  
+        elif state == 'entangled' and self.num_qubits > 1:
             circuit.h(0)
             for i in range(1, self.num_qubits):
                 circuit.cx(0, i) 
@@ -33,145 +32,85 @@ class qubit_generator:
 
 class quantum_node:
 
-    def quantum_node_operation_random(self, circuit,  fidelity, ideal_fidelity, qubit_idx, mode='random', num_operations=3):
-        if fidelity >= ideal_fidelity:
-            for _ in range(num_operations):
-                gate_choice = np.random.choice(['h', 'x', 'y', 'z', 's', 't', 'cx'])
-                if gate_choice == 'h':
-                    circuit.h(qubit_idx)
-                elif gate_choice == 'x':
-                    circuit.x(qubit_idx)
-                elif gate_choice == 'y':
-                    circuit.y(qubit_idx)
-                elif gate_choice == 'z':
-                    circuit.z(qubit_idx)
-                elif gate_choice == 's':
-                    circuit.s(qubit_idx)
-                elif gate_choice == 't':
-                    circuit.t(qubit_idx)
-                elif gate_choice == 'cx':
-                    target_qubit = (qubit_idx + 1) % circuit.num_qubits
-                    circuit.cx(qubit_idx, target_qubit)
-                else: 
-                    break
+    def __init__(self):
+        self.gate_map = {
+            'h': lambda circuit, i: circuit.h(i),
+            'x': lambda circuit, i: circuit.x(i),
+            'y': lambda circuit, i: circuit.y(i),
+            'z': lambda circuit, i: circuit.z(i),
+            's': lambda circuit, i: circuit.s(i),
+            't': lambda circuit, i: circuit.t(i),
+            'cx': lambda circuit, i: circuit.cx(i, (i + 1) % circuit.num_qubits)
+        }
+
+    def apply_gates(self, circuit, qubit_idx, gates):
+        for gate in gates:
+            for i in qubit_idx:
+                self.gate_map[gate](circuit, i)
+        return circuit
+
+    def quantum_node_operation(self, circuit, fidelity, ideal_fidelity, qubit_idx, mode: str, num_operations=3, series_vector=None):
+        if fidelity < ideal_fidelity:
+            print("Error: Qubits did not maintain coherence")
             return circuit
-        else: 
-            print ("Error: Qubits did not maintain coherence")
 
-
-    def quantum_node_operation_rigorous(self, circuit, fidelity, ideal_fidelity, qubit_idx, mode='rigourous'):
-        if fidelity >= ideal_fidelity:
-            circuit.h(qubit_idx)
-            circuit.t(qubit_idx)
-            circuit.x(qubit_idx)
-            circuit.s(qubit_idx)
-            circuit.z(qubit_idx)
-            circuit.y(qubit_idx)
-            circuit.cx(qubit_idx, (qubit_idx + 1) % circuit.num_qubits) 
+        if mode == 'random':
+            gates = [np.random.choice(list(self.gate_map.keys())) for _ in range(num_operations)]
+        elif mode == 'rigorous':
+            gates = ['h', 't', 'x', 's', 'z', 'y', 'cx']
+        elif mode == 'series' and series_vector:
+            gates = series_vector
+        else:
+            print("Error: Invalid mode or missing series_vector")
             return circuit
-        else: 
-            print ("Error: Qubits did not maintain coherence")
 
-    def quantum_node_operation_series(self, circuit, fidelity, ideal_fidelity, qubit_idx, mode='series', series_vector=['h', 't', 'x', 's', 'z', 'y', 'cx']):
+        return self.apply_gates(circuit, qubit_idx, gates)
 
-        if fidelity >= ideal_fidelity:
-            for gate_type in series_vector:
-                if gate_type == 'h':
-                    circuit.h(qubit_idx)
-                elif gate_type == 'x':
-                    circuit.x(qubit_idx)
-                elif gate_type == 'y':
-                    circuit.y(qubit_idx)
-                elif gate_type == 'z':
-                    circuit.z(qubit_idx)
-                elif gate_type == 's':
-                    circuit.s(qubit_idx)
-                elif gate_type == 't':
-                    circuit.t(qubit_idx)
-                elif gate_type == 'cx':
-                    target_qubit = (qubit_idx + 1) % circuit.num_qubits
-                else:
-                    break
-            return circuit
-        else: 
-            print ("Error: Qubits did not maintain coherence")
-    
-
-class wire:
+class wire_maker:
   def __init__(self, origin_node, destination_node, size, distance):
     self.origin_node = origin_node
-    # Node in which is the destination for qubit transfers
     self.destination_node = destination_node
-    # Number of qubits in which can be transfered at once over this wire
     self.size = size
-    # Distance between nodes in meters
     self.distance = distance
 
-  def set_origin_node(self, new_origin):
-    self.origin_node = new_origin
+  def create_wire(self):
+      wire=[]
+      wire.append(self.origin_node)
+      wire.append(self.destination_node)
+      wire.append(self.size)
+      wire.append(self.distance)
+      return wire
 
-  def set_destination_node(self, new_destination): # Class method
-    self.destination_node = new_destination
-
-  def set_size(self, new_size): # Class method
-    self.size = new_size
-
-  def set_distance(self, new_distance): # Class method
-    self.distance = new_distance
-
-  # TODO: Finish this
+  # TODO: FINISH COHERENCE BEFORE ADDRESSING
   def transport_qubit(self, circuit, qubit_idx):
-    # Example coherence-preserving operation during "transport"
-    circuit.i(qubit_idx)  # Identity gate as placeholder
+    circuit.i(qubit_idx)
     return circuit
-
-class qubit_transporter:
-    def __init__(self, circuit):
-        self.circuit = circuit
-
-    def transport_qubit(self, qubit_idx):
-        # Example coherence-preserving operation during "transport"
-        self.circuit.i(qubit_idx)  # Identity gate as placeholder
-        return self.circuit
     
 class coherence_evaluator:
     def __init__(self, noise_level=0.01):
         # Initialize with a default noise level, which can be modified
         self.noise_level = noise_level
 
-    def evaluate_coherence(self, circuit):
+    def evaluate_coherence(self, circuit, num_qubits):
         # Step 1: Generate the ideal state vector from the input circuit
         ideal_state = Statevector.from_instruction(circuit)
 
         # Step 2: Define the noise model to simulate decoherence
         noise_model = NoiseModel()
-        # Apply depolarizing noise to all qubits in the circuit
-        error = depolarizing_error(self.noise_level, 1)
-        noise_model.add_all_qubit_quantum_error(error, ['id', 'h', 'cx'])
+        # NEED TO MAKE MORE RIGOROUS IN FUTURE ITERATIONS
+        error = depolarizing_error(self.noise_level, num_qubits)
+        noise_model.add_all_qubit_quantum_error(error, ['cx'])
 
-        # Step 3: Run the input circuit with noise
-        backend = AerSimulator.get_backend('statevector_simulator')
-        noisy_result = transpile(circuit, backend, noise_model=noise_model).result()
+        backend = AerSimulator(method='statevector', noise_model=noise_model)
+        noisy_circuit = transpile(circuit, backend)
+        noisy_circuit.save_statevector()
+        job = backend.run(noisy_circuit)
+        noisy_result = job.result()
+        noisy_result.get_statevector(noisy_circuit, decimals=10)
         noisy_state = noisy_result.get_statevector()
-
-        # Step 4: Calculate fidelity between ideal and noisy state
         fidelity = state_fidelity(ideal_state, noisy_state)
 
         return fidelity
-'''   
-class qubit_measurer:
-    def __init__(self, circuit):
-        self.circuit = circuit
-
-    def measure_qubits(self):
-        end = []
-        # Measure all qubits in the circuit
-        num_qubits = self.circuit.num_qubits
-        self.circuit.measure_all()
-
-        end.append(self.circuit)
-        return end
-'''
     
 
 class shors_QEC:
@@ -189,33 +128,3 @@ class shors_QEC:
         qft_circuit = QFT(qubits).decompose()
         qc.append(qft_circuit, range(qubits))
         return qc
-    
-    def shors_code_qec(self):
-        # Step 1: Encode a logical qubit using Shor's code
-        # Initialize the first qubit to |+⟩
-        self.circuit.h(self.data_qubits[0])
-        for i in [1, 2]:
-            self.circuit.cx(self.data_qubits[0], self.data_qubits[i])  # Create GHZ state (|000⟩ + |111⟩) / sqrt(2)
-
-        # Repeat this for the remaining pairs of three qubits to fully encode
-        for i in range(0, 9, 3):
-            self.circuit.cx(self.data_qubits[i], self.data_qubits[i + 1])
-            self.circuit.cx(self.data_qubits[i], self.data_qubits[i + 2])
-
-        # Step 2: Syndrome Measurement for error detection
-        # Measure parity checks to detect bit-flip errors
-        for i in range(3):
-            self.circuit.cx(self.data_qubits[3 * i], self.data_qubits[3 * i + 1])
-            self.circuit.cx(self.data_qubits[3 * i], self.data_qubits[3 * i + 2])
-
-        # Step 3: Decode back to single qubit (simplified version)
-        for i in range(1, 9):
-            self.circuit.cx(self.data_qubits[0], self.data_qubits[i])  # Undo encoding to retrieve logical qubit
-
-        # Step 4: Measure to confirm correction
-        self.circuit.measure(self.data_qubits[0], self.ancilla_bits[0])
-
-        return self.circuit
-    
-
-

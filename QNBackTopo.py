@@ -12,7 +12,7 @@ class topology:
         self.visited_origin_nodes = set() 
         self.visited_destination_nodes = set()
 
-    def parse_file(file_name):
+    def parse_file(self, file_name):
         nodes = []
         qubits = None
         distance = None
@@ -43,49 +43,46 @@ class topology:
                         distance = float(line)
         return nodes, qubits, distance 
 
-    def create_topology(self, nodes, qubits, distance):
-        validator = node_validator(nodes)
-        verdict = validator.validate()
-        if verdict == True:
-            mapList = []
-            for i in nodes:
-                if nodes[i]  == 0:
-                    origin = qubit_generator.generate_qubits(qubits)
-                    mapList.append(origin)
-                elif nodes[i] != 1 and nodes[i] != 0:
-                    node = quantum_node.quantum_node_operation()
-                    mapList.append(node)
-                elif nodes[i] == 1:
-                    break
-
-            wireList=[]
-            for i in mapList:
-                wire = wire.wire(mapList[i], mapList[i+1], wire_size=qubits, node_distance=distance)
-                wireList.apped(wire)
-            return mapList, wireList
-
 class builder:
 
     def assemble_network(self, input_file, ideal_fidelity:float):
         topo = topology()
         nodes, qubits, distance = topo.parse_file(input_file)
-        wires, mapping = topo.create_topology(nodes, qubits, distance)
-
+        qubit_idx = list(range(qubits))
         global_circuit = QuantumCircuit(qubits, qubits)
-        for idx, node in enumerate(mapping):
-            if isinstance(node, qubit_generator):
-                generated = node.generate_qubits()
-                global_circuit.compose(generated[0], inplace=True)
-            elif isinstance(node, quantum_node):
-                qubit_idx = idx % qubits
-                fidelity=coherence_evaluator.evaluate_coherence(global_circuit)
-                circuit = node.quantum_node_operation(global_circuit, fidelity, ideal_fidelity, qubit_idx)
-                global_circuit.compose(circuit, inplace=True)
+
+        validator = node_validator(nodes)
+        verdict = validator.validate()
+        gen = qubit_generator(qubits)
+        qnode = quantum_node()
+        if verdict == True:
+            mapList = []
+            for i in nodes:
+                if nodes[i]  == 0:
+                    origin = gen.generate_qubits()
+                    global_circuit.compose(origin, inplace=True)
+                    global_circuit.barrier()
+                    mapList.append('origin')
+                elif nodes[i] != 1 or nodes[i] != 0:
+                    coh_eval = coherence_evaluator()
+                    fidelity = coh_eval.evaluate_coherence(global_circuit, qubits)
+                    node = qnode.quantum_node_operation(circuit=global_circuit, fidelity=fidelity,ideal_fidelity=ideal_fidelity, qubit_idx = qubit_idx, mode='rigorous')
+                    global_circuit.compose(node, inplace=True)
+                    global_circuit.barrier()
+                    mapList.append('node')
+                elif nodes[i] == 1:
+                    global_circuit.barrier()
+                    mapList.append('destination')
+                    break
         
-        for wire in wires:
-            for qubit_idx in range(wire.size):
-                wire.transport_qubit(global_circuit, qubit_idx)
-        
+        wireList=()
+        for i in range(len(mapList)):
+            if i < len(mapList)-1 :
+                wire_build = wire_maker(origin_node=mapList[i], destination_node=mapList[i+1], size=qubits, distance=distance)
+                wire = wire_build.create_wire()
+                wireList = wireList + (wire, )
+            else:
+                break
         shors_circuit = shors_QEC.shors_subcircuit(qubits)
         global_circuit.compose(shors_circuit, inplace=True)
     
@@ -93,19 +90,3 @@ class builder:
         global_circuit.measure(range(qubits), range(qubits))
 
         return global_circuit
-
-
-
-
-
-
-        
-
-    # Going to establish the wires and map into a fixed form here maybe cast to a 2D array?
-    # Need to add coherence evaluator are every point and ensure that before it goes to the
-    # last node it hits the shors_QEC method. Also, may need to rework final node. Cannot 
-    # let it exist as a node since it just calls measure all automatically and will collpase 
-    # the state.
-
-
-
