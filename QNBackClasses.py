@@ -48,8 +48,8 @@ class quantum_node:
             for i in qubit_idx:
                 self.gate_map[gate](circuit, i)
         return circuit
-
-    def quantum_node_operation(self, circuit, fidelity, ideal_fidelity, qubit_idx, mode: str, num_operations=3, series_vector=None):
+   
+    def quantum_node_operation(self, circuit, fidelity, ideal_fidelity, qubit_idx, mode: str, num_operations=1, series_vector=['h', 't', 'x', 's', 'z', 'y', 'cx']):
         if fidelity < ideal_fidelity:
             print("Error: Qubits did not maintain coherence")
             return circuit
@@ -65,6 +65,7 @@ class quantum_node:
             return circuit
 
         return self.apply_gates(circuit, qubit_idx, gates)
+
 
 class wire_maker:
   def __init__(self, origin_node, destination_node, size, distance):

@@ -58,23 +58,24 @@ class builder:
         if verdict == True:
             mapList = []
             for i in nodes:
-                if nodes[i]  == 0:
+                print(i)
+                if i  == 0:
                     origin = gen.generate_qubits()
-                    global_circuit.compose(origin, inplace=True)
+                    global_circuit.compose(origin)
                     global_circuit.barrier()
                     mapList.append('origin')
-                elif nodes[i] != 1 or nodes[i] != 0:
                     coh_eval = coherence_evaluator()
                     fidelity = coh_eval.evaluate_coherence(global_circuit, qubits)
-                    node = qnode.quantum_node_operation(circuit=global_circuit, fidelity=fidelity,ideal_fidelity=ideal_fidelity, qubit_idx = qubit_idx, mode='rigorous')
-                    global_circuit.compose(node, inplace=True)
+                    node = qnode.quantum_node_operation(circuit=global_circuit, fidelity=fidelity,ideal_fidelity=ideal_fidelity, qubit_idx = qubit_idx, mode='random')
+                    global_circuit.compose(node)
+
                     global_circuit.barrier()
                     mapList.append('node')
-                elif nodes[i] == 1:
+                else:
                     global_circuit.barrier()
                     mapList.append('destination')
                     break
-        
+                    
         wireList=()
         for i in range(len(mapList)):
             if i < len(mapList)-1 :
@@ -87,6 +88,6 @@ class builder:
         global_circuit.compose(shors_circuit, inplace=True)
     
 
-        global_circuit.measure(range(qubits), range(qubits))
+        global_circuit.measure_all()
 
         return global_circuit

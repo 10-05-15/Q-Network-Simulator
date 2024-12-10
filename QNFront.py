@@ -10,7 +10,7 @@ builder = builder()
 bob_circuit = builder.assemble_network('/Users/j03/Desktop/Coding/GitHub/Q-Network-Simulator/QN-dummy.txt', 0.5)
 # Create Universal simulator - DONE
 # Create and build a network - DONE
-# Produce visual of network
+# Produce visual of network - DONE
 # Retrieve output of network - DONE
 # Esnure that output is as desired
 
