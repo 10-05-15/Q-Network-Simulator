@@ -66,7 +66,7 @@ class builder:
         nodes, qubits, distance, mode, ideal_fidelity = topo.parse_file(input_file)
         qubit_idx = list(range(qubits))
         global_circuit = QuantumCircuit(qubits, qubits)
-
+        k = 0.01
         validator = node_validator(nodes)
         verdict = validator.validate()
         gen = qubit_generator(qubits)
@@ -82,7 +82,7 @@ class builder:
                     mapList.append('origin')
                     continue
                 elif i != 0 and i != 1:
-                    coh_eval = coherence_evaluator(noise_level=0.01)
+                    coh_eval = coherence_evaluator()
                     fidelity = coh_eval.evaluate_coherence(circuit=global_circuit, num_qubits=qubits, distance=distance)
                     fidelity_values.append(fidelity)
                     node = qnode.quantum_node_operation(circuit=global_circuit, fidelity=fidelity,ideal_fidelity=ideal_fidelity, qubit_idx = qubit_idx, mode=mode)
