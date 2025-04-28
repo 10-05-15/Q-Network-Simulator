@@ -6,15 +6,23 @@ AS FOLLOWS:
 
 -NODE-
 Origin
-Node1
-Node2
+Node 1
+Node 2
 . . .
-NodeN
+Node N
 End
 -QUBITS-
 XXX
 -DISTANCE-
+Distance between Origin and Node 1 (km)  
+Distance between Node 1 and Node 2 (km)  
+. . .
+Distance between Node N-1 and Node N (km)  
+Distance between Node N and End
 XXX
+-MODE-
+defines mode of the quantum nodes 
+Currently only 2 modes, 'series' or 'random'
 
 *******************************************
 

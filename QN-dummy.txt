@@ -2,8 +2,16 @@
 0
 2
 3
+4
 1
 -QUBITS-
 2
 -DISTANCE-
 45
+32
+33
+40
+-MODE-
+random
+-IDEAL FIDELITY-
+0.05

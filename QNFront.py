@@ -7,12 +7,11 @@ from qiskit.visualization import plot_histogram
 
 
 builder = builder()
-bob_circuit = builder.assemble_network('/Users/j03/Desktop/Coding/GitHub/Q-Network-Simulator/QN-dummy.txt', 0.5)
-# Create Universal simulator - DONE
-# Create and build a network - DONE
-# Produce visual of network - DONE
-# Retrieve output of network - DONE
-# Esnure that output is as desired
+# BE SURE TO CHANGE FILE PATH ON USERS PC
+bob_circuit, fidelity_values = builder.assemble_network('/Users/j03/Desktop/Coding/GitHub/Q-Network-Simulator/QN-dummy.txt')
+
+# Distance Degredation effect - DONE
+# Cooler looking network map - WORK IN PROGRESS
 
 
 
@@ -22,6 +21,9 @@ job = backend.run(qnet_circuit)
 result = job.result()
 counts = result.get_counts()
 
+print(fidelity_values)
+
+# Current plots we have, please keep them around even after the new plots are made.
 histogram = plot_histogram(counts)
 circuit_plot = bob_circuit.draw(output='mpl')
 
