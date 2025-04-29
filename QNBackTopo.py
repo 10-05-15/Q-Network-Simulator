@@ -1,5 +1,6 @@
 from QNBackClasses import *
 from QNValidator import *
+from graphviz import Digraph
 
 
 # Builds Topology of the Quantum Network
@@ -16,7 +17,7 @@ class topology:
     def parse_file(self, file_name):
         nodes = []
         qubits = None
-        distance = []
+        distances = []
         mode=''
         ideal_fidelity=0
 
@@ -49,7 +50,7 @@ class topology:
                         qubits = int(line)
                 elif section == "DISTANCE":
                     if line:
-                        distance.append(float(line))
+                        distances.append(int(line))
                 elif section == "MODE":
                     if line:
                         mode = str(line)
@@ -57,21 +58,21 @@ class topology:
                     if line:
                         ideal_fidelity = float(line)
 
-        return nodes, qubits, distance, mode, ideal_fidelity
+        return nodes, qubits, distances, mode, ideal_fidelity
 
 class builder:
     # Builds the network based on the input file parsed above.
     def assemble_network(self, input_file):
         topo = topology()
-        nodes, qubits, distance, mode, ideal_fidelity = topo.parse_file(input_file)
+        nodes, qubits, distances, mode, ideal_fidelity = topo.parse_file(input_file)
         qubit_idx = list(range(qubits))
         global_circuit = QuantumCircuit(qubits, qubits)
-        k = 0.01
         validator = node_validator(nodes)
         verdict = validator.validate()
         gen = qubit_generator(qubits)
         qnode = quantum_node()
         fidelity_values=[]
+        coh_eval = coherence_evaluator(noise_level=0.0001)
         if verdict == True:
             mapList = []
             for i in nodes:
@@ -82,8 +83,7 @@ class builder:
                     mapList.append('origin')
                     continue
                 elif i != 0 and i != 1:
-                    coh_eval = coherence_evaluator()
-                    fidelity = coh_eval.evaluate_coherence(circuit=global_circuit, num_qubits=qubits, distance=distance)
+                    fidelity = coh_eval.evaluate_coherence(circuit=global_circuit, num_qubits=qubits, distance=distances)
                     fidelity_values.append(fidelity)
                     node = qnode.quantum_node_operation(circuit=global_circuit, fidelity=fidelity,ideal_fidelity=ideal_fidelity, qubit_idx = qubit_idx, mode=mode)
                     global_circuit.compose(node)
@@ -101,7 +101,7 @@ class builder:
         wireList=()
         for i in range(len(mapList)):
             if i < len(mapList)-1 :
-                wire_build = wire_maker(origin_node=mapList[i], destination_node=mapList[i+1], qubits=qubits, distance=distance[i])
+                wire_build = wire_maker(origin_node=mapList[i], destination_node=mapList[i+1], qubits=qubits, distance=distances[i])
                 wire = wire_build.create_wire()
                 wireList = wireList + (wire, )
             else:
@@ -114,4 +114,4 @@ class builder:
         global_circuit.measure_all()
 
         # Returns the Circuit and Fidelity values from the Coherence checks between each node.
-        return global_circuit, fidelity_values
+        return global_circuit, fidelity_values, nodes, distances, qubits, mode, ideal_fidelity

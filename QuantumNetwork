@@ -1,0 +1,18 @@
+digraph QuantumNetwork {
+	0 [label="Node 0"]
+	2 [label="Node 2"]
+	3 [label="Node 3"]
+	4 [label="Node 4"]
+	1 [label="Node 1"]
+	0 -> 2 [label="45 km"]
+	2 -> 3 [label="32 km"]
+	3 -> 4 [label="33 km"]
+	4 -> 1 [label="40 km"]
+	subgraph cluster_legend {
+		label=Legend
+		Q [label="Qubits: 2"]
+		M [label="Mode: random"]
+		F [label="Ideal Fidelity: 0.05"]
+		style=dashed
+	}
+}

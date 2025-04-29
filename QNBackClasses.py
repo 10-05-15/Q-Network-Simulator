@@ -102,9 +102,9 @@ class coherence_evaluator:
         self.noise_level = noise_level
 
     def distance_degrade(self, distance:list):
-        for i in distance:
+        for i in range(len(distance)):
             if i > 10:
-                self.noise_level += self.noise_level + (math.sqrt(i)/1000)
+                self.noise_level += self.noise_level + ((i * self.noise_level)/10000)
             else: continue
 
     def evaluate_coherence(self, circuit, num_qubits, distance:list):
@@ -118,7 +118,7 @@ class coherence_evaluator:
 
         # Step 3: Appropriately increase the noise level given the distance between the nodes.
         self.distance_degrade(distance)
-    
+     
         # NEED TO MAKE MORE RIGOROUS IN FUTURE ITERATIONS
         error = depolarizing_error(self.noise_level, num_qubits)
         noise_model.add_all_qubit_quantum_error(error, ['cx'])
@@ -128,7 +128,7 @@ class coherence_evaluator:
         noisy_circuit.save_statevector()
         job = backend.run(noisy_circuit)
         noisy_result = job.result()
-        noisy_result.get_statevector(noisy_circuit, decimals=10)
+        noisy_result.get_statevector(noisy_circuit, decimals=20)
         noisy_state = noisy_result.get_statevector()
         fidelity = state_fidelity(ideal_state, noisy_state)
 
