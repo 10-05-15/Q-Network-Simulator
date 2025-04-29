@@ -13,7 +13,7 @@ builder = builder()
 bob_circuit, fidelity_values, nodes, distances, qubits, mode, ideal_fidelity = builder.assemble_network('/Users/j03/Desktop/Coding/GitHub/Q-Network-Simulator/QN-dummy.txt')
 
 # Distance Degredation effect - DONE
-# Cooler looking network map - WORK IN PROGRESS
+# Cooler looking network map - DONE
 
 dot = Digraph('QuantumNetwork', format='png')
 
